@@ -1,29 +1,38 @@
 import * as React from 'react';
+import * as THREE from "three";
+import {useEffect, useState} from 'react';
 import { useFrame } from 'react-three-fiber';
+import io from 'socket.io-client';
+
+const socket = io.connect("http://localhost:3001");
 
 const MyCylinder = ({}) => {
     const myMesh = React.useRef();
-    let counter = 0;
+    const [position, setPosition] = useState({ x: 0, y: 0, z: 0 });
+    const { x, y, z } = position;
+    const vec = new THREE.Vector3(x, y, z);
+    
+
+    useEffect(() => {
+        socket.on("server-to-ui", (data) => {
+        const obj = JSON.parse(data);
+        setPosition({...position, z: obj.position.z});
+        console.log(obj);
+        });
+    }, [socket]);
+
+    
 
     useFrame(() => {
-        if(myMesh.current) {
-            myMesh.current.rotation.x += 0.01;
-            myMesh.current.rotation.y += 0.01;
-
-            if(counter < 100) {
-                //myMesh.current.position.x += 0.1;
-                //myMesh.current.position.y += 0.1;
-                myMesh.current.position.z += 0.1;
-                counter++;
-            } else if (counter >= 100 && counter < 200) {
-                //myMesh.current.position.x -= 0.1;
-                //myMesh.current.position.y -= 0.1;
-                myMesh.current.position.z -= 0.1;
-                counter++;
-            } else {
-                counter = 0;
-            }
-        }
+        myMesh.current.position.lerp(vec, 0.2);
+        // if(myMesh.current) {
+        myMesh.current.rotation.x += 0.01;
+        myMesh.current.rotation.y += 0.01;
+        //     //myMesh.current.position.z = messageReceived;
+            
+        //     myMesh.current.position.lerp(vec, 1);
+        // }
+        
     });
 
     return (
